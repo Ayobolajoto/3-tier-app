@@ -1,0 +1,154 @@
+# Define AWS Provider
+provider "aws" {
+  region = "eu-north-1"
+}
+
+# VPC
+resource "aws_vpc" "main_vpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "main-vpc"
+  }
+}
+
+# Subnets
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.main_vpc.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "eu-north-1a"
+
+  tags = {
+    Name = "public-subnet"
+  }
+}
+
+# Internet Gateway
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  tags = {
+    Name = "main-gateway"
+  }
+}
+
+# Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+
+  tags = {
+    Name = "public-route-table"
+  }
+}
+
+# Route Table Association
+resource "aws_route_table_association" "a" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# Security Group
+resource "aws_security_group" "app_sg" {
+  name        = "app-security-group"
+  description = "Allow HTTP, HTTPS, and SSH"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "app-sg"
+  }
+}
+
+# EC2 Instances
+resource "aws_instance" "frontend" {
+  ami           = "ami-000e50175c5f86214"
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.public_subnet.id
+  key_name	= aws_key_pair.devops_key.key_name
+
+  tags = {
+    Name = "frontend-instance"
+  }
+}
+
+resource "aws_instance" "backend" {
+  ami           = "ami-000e50175c5f86214"
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.public_subnet.id
+  key_name	= aws_key_pair.devops_key.key_name
+
+  tags = {
+    Name = "backend-instance"
+  }
+}
+
+resource "aws_instance" "database" {
+  ami           = "ami-000e50175c5f86214"
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.public_subnet.id
+  key_name	= aws_key_pair.devops_key.key_name
+
+  tags = {
+    Name = "database-instance"
+  }
+}
+resource "aws_key_pair" "devops_key" {
+  key_name   = "devops-key"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCHUWWAiOiSB8Lxx0xphi2a36VC8ESFKDVIIjIQ5M/TfFIh0buViFXJkvUqLHcCAAngjk3yypmC5uuWpF35n8h4xd1BjmgzoDh72wkdbEKFWxpINadQj+0Uc4B7GceNn0a+pYPoK89+NejVNFxY+9wQDUhO97tYGbTRclEomgGc8Eg9baG5TlWIXfeXQDYUQUKvjaaEHIUNRW9wmYGu7zQs09GgTXjFYn1+iZTZib4oQoCHS7ywvOM4GC0XMJp7OsncrVbbfBsgkuvPEKkE8y3S9YKrcg8dQjgpX+samS//zd0tXIaLcSz9UVX0IxQtbtkuznNRMY5lg0rTOKUaj+xbTtP/LUGc5npjdMftuILZGYceibUpcuZbzDr7bz6LLgugF/s8E8jbSGLZBgfgnIdPgpZh7EDWVAafrwlA5EpykgiBfz05qvvmkSXdLxWkEalaXjC8TWVT8vIbu7euwwL/He9rqyK3UYfmlSnbUiIp+BgudERzcBQiuraUnhzN1FjO+hG+xeWb8/Q/Ed70Li9dsc5Tu3o0sBJr8m3RoTO6F7kBP5jrgaNzt4PXjfxH/Zwt1wxJmbjgrnCGXZ5VX24EmSYIl6tXArEP4xlL0I0ykF67mccrcMDhmg+qUyulu7GFpHiLMT6x6cA31lP9SAy1aCmLDMfmLd0ASbc4Jrn38w== ademidimeji@DESKTOP-LM6E68O"
+
+  }
+
+output "frontend_public_ip" {
+  value = aws_instance.frontend.public_ip
+  
+}
+
+output "backend_public_ip" {
+  value = aws_instance.backend.public_ip
+
+  
+}
+
+output "database_public_ip" {
+  value = aws_instance.database.public_ip
+
+  
+}
