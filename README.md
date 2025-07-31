@@ -1,4 +1,4 @@
-# 🚀 3-Tier Web Application Infrastructure Automation
+#  3-Tier Web Application Infrastructure Automation
 
 This project showcases the complete setup, automation, and deployment of a production-ready 3-tier web application using DevOps best practices. It includes infrastructure provisioning, containerization, orchestration, configuration management, and CI/CD integration — all built and deployed on AWS.
 
