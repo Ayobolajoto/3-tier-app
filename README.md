@@ -58,10 +58,9 @@ This project showcases the complete setup, automation, and deployment of a produ
 ##  How to Run (Basic Workflow)
 
 1. **Provision Infrastructure**
- 
-   cd terraform
-   terraform init
-   terraform apply
+cd terraform
+terraform init
+terraform apply
 
 2. Build and Run Locally (Optional)
 
